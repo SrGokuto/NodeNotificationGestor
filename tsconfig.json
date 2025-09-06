@@ -1,18 +1,29 @@
 {
   "compilerOptions": {
+    // Node ESM
     "module": "NodeNext",
-    "target": "ES2020",
     "moduleResolution": "NodeNext",
+
+    // Versión moderna de JS
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    // Carpeta de salida si compilas con `tsc`
+    "rootDir": "./",
+    "outDir": "./dist",
+
+    // Soporte para imports modernos con `.js`
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+
+    // Estricto pero sencillo
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+
+    // Mapas (opcional)
+    "sourceMap": true
   },
-  "ts-node": {
-    "esm": true
-  }
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
