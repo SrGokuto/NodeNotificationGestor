@@ -170,108 +170,72 @@ export default EnvioAlertaConsola
 
 
 
+# EvaluaccionNotificacionSistema SRP y  OCP
+
+## Single Responsibility
+1. Diagnóstico
+
+La clase NotificacionSistema hereda de Notificacion y redefine el método enviar().
+
+Cumple parcialmente con el Principio de Responsabilidad Única (SRP), porque su única función es representar y enviar notificaciones del sistema.
+
+Cumple parcialmente con el Principio Abierto/Cerrado (OCP), ya que extiende Notificacion sin modificarla, pero su método enviar() depende directamente de console.log, lo que limita su extensión hacia otros canales (ej. email, SMS, etc.).
 
 
-### Evaluación del SRP (NotificacionSistema)
-### 1. Clase base (Notificacion)
 
-Encapsula los atributos comunes (id, mensaje).
+---
 
-Define el contrato que obliga a implementar enviar().
-Tiene una sola responsabilidad: ser la abstracción de cualquier notificación.
+2. Justificación
 
-2. Clase derivada (NotificacionSistema)
+✅ A favor SRP: La clase está enfocada en un solo tipo de notificación (sistema).
 
-Solo redefine enviar() para mostrar cómo se envía un mensaje del sistema.
-
-Razón de cambio única: si en el futuro cambia la forma en que se muestran las notificaciones del sistema.
-Cumple con el SRP, porque no mezcla otras tareas (ejemplo: guardar en base de datos, enviar correo, registrar logs).
-La clase tiene una única responsabilidad: definir el comportamiento de una notificación de tipo sistema.
-
- En conclucion 
- Si cambian otras cosas (persistence, interfaz gráfica, notificaciones push, etc.), esta clase no tendría que modificarse.
-Cada clase hija (NotificacionAlerta, NotificacionSistema, NotificacionUsuario) tiene su propia razón de cambio y no afecta a las demás.
+⚠️ En contra OCP: Si se necesita enviar la notificación del sistema a otro medio (correo, base de datos, API externa), habría que modificar la clase directamente en lugar de extender su comportamiento.
 
 
-¿Qué pasaría si no se aplicara bien?
-El SRP se rompería si, por ejemplo, NotificacionSistema también:
-Guardara la notificación en base de datos.
-Registrara logs de auditoría.
-Manejara la configuración de notificaciones.
-En ese caso, la solución es separar las responsabilidades:
 
+---
+
+3. Riesgo identificado
+
+Rigidez del código: La dependencia de console.log hace que la clase no sea fácilmente escalable ni adaptable a otros mecanismos de envío.
+
+Violación futura de OCP: Cada nuevo tipo de salida obligará a cambiar enviar(), rompiendo el principio de extensión sin modificación.
+
+
+
+---
+
+4. Posible solución propuesta
+
+Implementar un patrón estrategia o inyectar una interfaz de envío para abstraer el mecanismo de notificación.
+
+Ejemplo de mejora:
+// Definimos una interfaz para el envío
+interface IEnviador {
+    enviar(mensaje: string): void;
+}
 ```ts
-// Servicio para enviar
-export class ServicioEnvio {
-    enviar(notificacion: Notificacion) {
-        notificacion.enviar();
+// Implementación concreta (ejemplo: consola)
+class EnviadorConsola implements IEnviador {
+    enviar(mensaje: string): void {
+        console.log("💻 Notificación del Sistema: " + mensaje);
     }
 }
 
-// Servicio para persistencia
-export class RepositorioNotificaciones {
-    guardar(notificacion: Notificacion) {
-        console.log("📦 Guardando en la base de datos:", notificacion);
+// Clase NotificacionSistema mejorada
+import Notificacion from "./Notificacion"
+
+export class NotificacionSistema extends Notificacion {
+    private enviador: IEnviador;
+
+    constructor(id: number, mensaje: string, enviador: IEnviador) {
+        super(id, mensaje);
+        this.enviador = enviador;
     }
-}
-```
 
-De esta forma:
-* NotificacionSistema solo define el mensaje y du envio
-* los servicios externos se encargan de prsistir o de gestionar envios mas complejos. 
-
-
-### Evaluación del SRP (NotificacionUsuario)
-
-
-1. Clase base Notificacion
-
-Encapsula los atributos comunes (id, mensaje).
-Define la interfaz/contrato del método enviar().
-Tiene una sola responsabilidad: representar una notificación genérica.
-
-2. Clase hija NotificacionUsuario
-
-Implementa únicamente la forma de enviar una notificación dirigida al usuario.
-Razón de cambio única: si en el futuro cambia la forma en que los usuarios reciben sus notificaciones (ej. de consola → correo → push).
-Cumple el SRP porque no mezcla responsabilidades adicionales.
-
-Conclucion
-La clase tiene una sola responsabilidad: enviar notificaciones específicas para usuarios.
-No está mezclando tareas como persistencia, logging o manejo de configuración.
-Cambios en otro tipo de notificación (alerta, sistema) no afectan esta clase.
-
-¿Qué pasaría si no se aplicara bien?
-El SRP se rompería si NotificacionUsuario también se encargara de:
-Guardar la notificación en base de datos.
-Validar usuarios o gestionar permisos.
-Definir la lógica de envío (ej. correo, SMS, push) directamente aquí.
-
-```ts
-// Servicio que gestiona el envío
-export class ServicioEnvio {
-    enviar(notificacion: Notificacion) {
-        notificacion.enviar();
-    }
-}
-
-// Servicio que gestiona persistencia
-export class RepositorioNotificaciones {
-    guardar(notificacion: Notificacion) {
-        console.log("📦 Guardando en la base de datos:", notificacion);
+    enviar() {
+        this.enviador.enviar(this.mensaje);
     }
 }
 ```
-De esta forma 
-* si se aplica bien el SRP
-* motivo: tiene una sola razon de cambio , como se entrga el mensaje al ususario
-* so no se aplicara bien : separar la logica en servicios especialisados para persistencia , envio masivo ,etc
-   
-  
 
-
-
-
-
-}
-```
