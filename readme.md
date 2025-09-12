@@ -170,7 +170,7 @@ export default EnvioAlertaConsola
 
 
 
-# EvaluaccionNotificacionSistema SRP y  OCP
+# Evaluacion NotificacionSistema SRP y  OCP
 
 ## Single Responsibility
 1. Diagnóstico
