@@ -18,9 +18,6 @@ El **Principio de Abierto-Cerrado** indica que las entidades de software deben e
 
 # Evaluación Notificacion SRP y OCP
 
-### `src/core/OrderService.ts`
-Responsabilidad declarada: Representar y gestionar el estado de una notificación `src/core/Notificacion.ts`
-
 ## Single Responsibility
 
 ### Diagnóstico: No cumple.
