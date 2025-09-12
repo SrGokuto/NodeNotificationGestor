@@ -114,7 +114,7 @@ Razón de cambio única: si en el futuro cambia la forma en que se muestran las 
 Cumple con el SRP, porque no mezcla otras tareas (ejemplo: guardar en base de datos, enviar correo, registrar logs).
 La clase tiene una única responsabilidad: definir el comportamiento de una notificación de tipo sistema.
 
- en conclucion 
+ En conclucion 
  Si cambian otras cosas (persistence, interfaz gráfica, notificaciones push, etc.), esta clase no tendría que modificarse.
 Cada clase hija (NotificacionAlerta, NotificacionSistema, NotificacionUsuario) tiene su propia razón de cambio y no afecta a las demás.
 
@@ -142,7 +142,7 @@ export class RepositorioNotificaciones {
 }
 ```
 
-de esta forma:
+De esta forma:
 * NotificacionSistema solo define el mensaje y du envio
 * los servicios externos se encargan de prsistir o de gestionar envios mas complejos. 
 
@@ -162,7 +162,7 @@ Implementa únicamente la forma de enviar una notificación dirigida al usuario.
 Razón de cambio única: si en el futuro cambia la forma en que los usuarios reciben sus notificaciones (ej. de consola → correo → push).
 Cumple el SRP porque no mezcla responsabilidades adicionales.
 
-conclucion
+Conclucion
 La clase tiene una sola responsabilidad: enviar notificaciones específicas para usuarios.
 No está mezclando tareas como persistencia, logging o manejo de configuración.
 Cambios en otro tipo de notificación (alerta, sistema) no afectan esta clase.
@@ -188,7 +188,7 @@ export class RepositorioNotificaciones {
     }
 }
 ```
-de esta forma 
+De esta forma 
 * si se aplica bien el SRP
 * motivo: tiene una sola razon de cambio , como se entrga el mensaje al ususario
 * so no se aplicara bien : separar la logica en servicios especialisados para persistencia , envio masivo ,etc
