@@ -1,4 +1,4 @@
-# Informe sobre el Principio de Responsabilidad Única (SRP)
+# Informe sobre principios SRP y OCP 
 
 ## Análisis de las Clases
 
@@ -11,65 +11,123 @@ En el proyecto se identifican las siguientes clases relacionadas con notificacio
 Cada clase representa un tipo específico de notificación y hereda de la clase base `Notificacion`. Por ejemplo, `NotificacionAlerta` implementa el método `enviar` para mostrar un mensaje de alerta.
 
 
-### Evaluación del SRP 
+### Definicon SRP y OCP
 El **Principio de Responsabilidad Única** establece que una clase debe tener una única razón para cambiar, es decir, debe estar enfocada en una sola responsabilidad.
+El **Principio de Abierto-Cerrado** indica que las entidades de software deben estar abiertas para extensión pero cerradas para modificación.
 
-#### ¿Se aplica bien?
-- **Sí, se aplica correctamente.**
-- Cada clase hija (`NotificacionAlerta`, `NotificacionSistema`, `NotificacionUsuario`) tiene la responsabilidad única de definir el comportamiento de envío para su tipo de notificación.
-- La clase base `Notificacion` encapsula los atributos y métodos comunes, mientras que las clases derivadas se encargan de la lógica específica de cada tipo.
 
-### Evaluación del SRP (Notificacion)
-La clase base Notificacion si cumple con SRP.
-- La clase solo tiene una responsabilidad:
-- Representar una notificación y permitir cambiar su estado *(de no leída a leída)*.
-- No mezcla otras tareas como mostrar en consola, enviar por email o decidir cómo se notifica.
-- Sus métodos *(constructor y marcarLeida)* están enfocados únicamente en gestionar datos internos de la notificación.
+# Evaluación Notificacion SRP y OCP
 
-#### ¿Por qué cumple SRP?
-- Modelo de datos → atributos `id, mensaje, leida`.
-- Lógica mínima del estado → `marcarLeida`.
+### `src/core/OrderService.ts`
+Responsabilidad declarada: Representar y gestionar el estado de una notificación `src/core/Notificacion.ts`
 
-#### Propuesta de mejora
-Podrías evitar que se cambie el *id* o el *mensaje* después de creado, porque lo normal es que una notificación tenga un mensaje fijo.
+## Single Responsibility
+
+### Diagnóstico: No cumple.
+### Justificación: La clase mezcla dos responsabilidades distintas.
+  1. Modelo de datos y estado *(id, mensaje, leida, método marcarLeida)*.
+  2. Presentación/salida por consola *(mostrar y el console.log dentro de marcarLeida)*.
+Esto genera razones de cambio distintas: si cambia la forma de almacenar el estado de la notificación → se modifica esta clase; y si cambia la forma de mostrar la información.
+
+### Riesgo si se mantiene así:
+- Alto acoplamiento entre lógica de negocio y presentación.
+- Pruebas frágiles porque para validar estado de la notificación también se imprime en consola.
+- Dificultad para extender o migrar la lógica de visualización a otro medio.
+
+### Posible Solución
 
 ```ts
 class Notificacion {
-    readonly id: number
-    readonly mensaje: string
-    private _leida: boolean
+    id: number
+    mensaje: string
+    leida: boolean
 
     constructor(id: number, mensaje: string) {
         this.id = id
         this.mensaje = mensaje
-        this._leida = false
+        this.leida = false
     }
 
     marcarLeida() {
-        this._leida = true
+        this.leida = true
+    }
+}
+
+export default Notificacion;
+```
+  
+
+## Open/Closed
+
+### Diagnóstico: No cumple.
+### Justificación: La clase no está pensada para extensión sin modificación.
+  1. Usa directamente *console.log*, lo que obliga a modificar el código cada vez que cambie el medio de presentación.
+  2. No utiliza interfaces o estrategias de salida que permitan inyectar distintos comportamientos sin tocar la clase.
+
+### Riesgo si se mantiene así:
+- Cada cambio en el formato de salida rompe el principio *Open/Closed*.
+- Se pierde reutilización: la clase no puede usarse en un contexto distinto sin modificar su código base.
+
+### Posible Solución
+
+```ts
+import Notificacion from "./Notificacion"
+
+// Interfaz de salida
+interface EstrategiaSalida {
+    mostrar(notificacion: Notificacion): void
+}
+
+// Estrategia 1: salida por consola
+class SalidaConsola implements EstrategiaSalida {
+    mostrar(notificacion: Notificacion): void {
+        console.log(`[${notificacion.id}] ${notificacion.mensaje} - Leída: ${notificacion.leida}`)
+    }
+}
+
+// Estrategia 2: salida como JSON (ejemplo API)
+class SalidaJSON implements EstrategiaSalida {
+    mostrar(notificacion: Notificacion): void {
+        console.log(JSON.stringify({
+            id: notificacion.id,
+            mensaje: notificacion.mensaje,
+            leida: notificacion.leida
+        }))
+    }
+}
+
+// Servicio que usa la estrategia
+class NotificacionPrinter {
+    private estrategia: EstrategiaSalida
+
+    constructor(estrategia: EstrategiaSalida) {
+        this.estrategia = estrategia
     }
 
-    get leida() {
-        return this._leida
+    imprimir(notificacion: Notificacion) {
+        this.estrategia.mostrar(notificacion)
     }
 }
 ```
-Así, el *mensaje* nunca cambia, y el estado leida se controla solo con el método.
+### Recomendaciones: Separar responsabilidades, Notificacion solo debería encargarse de datos y estado.
 
+# Evaluación NotificacionAlerta SRP y OCP
 
-### Evaluación del SRP (NotificacionAlerta)
-La clase NotificacionAlerta no cumple con SRP.
-- Por un lado, la clase representa una notificación de tipo alerta *(su responsabilidad principal)*.
-- Pero también se encarga de definir cómo se envía *(en este caso, imprimiendo en consola con console.log)*.
+## Single Responsibility
 
-#### ¿Por qué no cumple SRP?
-Tal como está, NotificacionAlerta no cumple SRP, porque mezcla modelo *(qué es la notificación)* con acción *(cómo se envía)*.
+### Diagnóstico: No cumple.
+### Justificación
+- La clase debería representar solo una notificación de tipo Alerta.
+- Pero además está implementando la lógica de envío *(console.log)*.
+- Eso mezcla dos responsabilidades:
+    1. Ser el modelo de una notificación de alerta.
+    2. Decidir cómo se envía *(presentación)*.
 
-#### Propuesta de mejora
-La solución es separar responsabilidades: la clase se encarga de ser el modelo, y los servicios/estrategias externos se encargan del envío.
+### Riesgo si se mantiene así:
+- Si cambia el medio de envío (email, SMS, API, archivo de logs), habría que modificar esta clase directamente.
+- Esto genera acoplamiento fuerte y pruebas frágiles.
 
-`1. Solución`
-Dejar a la clase solo como modelo de datos *(cumpliendo SRP)*.
+### Posible solución
 
 ```ts
 import Notificacion from "./Notificacion"
@@ -83,20 +141,39 @@ export class NotificacionAlerta extends Notificacion {
 export default NotificacionAlerta
 ```
 
-`2. Solución`
-Crear un servicio de envío *(responsabilidad aparte)*.
+
+## Open/Closed 
+
+### Diagnóstico: No cumple.
+### Justificación
+- No está preparada para extender sin modificar.
+- Solo admite console.log como medio de envío.
+- Si quieres soportar múltiples salidas, habría que cambiar el código de la clase.
+
+### Riesgo si se mantiene así:
+- *Violación del principio OCP*: cada nuevo tipo de envío implica cambiar la clase.
+- Afecta la mantenibilidad a largo plazo.
+
+### Posible solución
 
 ```ts
-import Notificacion from "./Notificacion"
+import NotificacionAlerta from "./NotificacionAlerta"
+import { EstrategiaEnvio } from "./EstrategiaEnvio"
 
-class EnvioConsola {
-    enviar(notificacion: Notificacion) {
+// Estrategia: envío de alerta por consola
+class EnvioAlertaConsola implements EstrategiaEnvio {
+    enviar(notificacion: NotificacionAlerta): void {
         console.log("⚠️ Notificación de Alerta: " + notificacion.mensaje)
     }
 }
 
-export default EnvioConsola
+export default EnvioAlertaConsola
+
 ```
+
+
+
+
 
 ### Evaluación del SRP (NotificacionSistema)
 ### 1. Clase base (Notificacion)
