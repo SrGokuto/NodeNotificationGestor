@@ -319,3 +319,10 @@ export class NotificacionUsuario extends Notificacion {
 
 
 ```
+
+
+# Conclusiones Generales
+
+## El diseño actual de las clases de notificación no cumple plenamente con los principios SOLID SRP (Responsabilidad Única) y OCP (Abierto/Cerrado).
+## El motivo principal es que las clases mezclan la lógica de datos/estado con la lógica de presentación o envío (por ejemplo, el uso directo de console.log dentro de los métodos).
+## Esto genera acoplamiento fuerte, dificulta la extensión y hace que cualquier cambio en el medio de salida requiera modificar las clases base y derivadas.
