@@ -238,4 +238,84 @@ export class NotificacionSistema extends Notificacion {
     }
 }
 ```
+# Evaluacion Notificacionusuario  SRP y  OCP
+1. Diagnóstico
 
+La clase NotificacionUsuario extiende de Notificacion y sobrescribe el método enviar() para personalizar el mensaje dirigido a usuarios. A primera vista cumple el Principio de Responsabilidad Única (SRP) y respeta el Principio Abierto/Cerrado (OCP), ya que especializa el comportamiento sin modificar la clase base.
+
+
+---
+
+2. Justificación
+
+Correcto:
+
+Se mantiene la herencia de la clase padre Notificacion, reutilizando atributos comunes (id y mensaje).
+
+La clase se especializa en un tipo específico de notificación: para usuarios.
+
+El método enviar() personaliza la lógica de salida con un ícono y formato claro.
+
+
+Posible mejora:
+
+Actualmente, el método enviar() depende de console.log, lo que lo hace rígido para escenarios más avanzados (ej. envío por correo, push notification, SMS).
+
+Si en el futuro se requieren múltiples canales, la clase podría violar el SRP al manejar demasiada lógica de salida.
+
+
+
+
+---
+
+3. Riesgo
+
+Si cada subclase (NotificacionSistema, NotificacionUsuario, NotificacionEmail, etc.) define su propia lógica interna de enviar(), se corre el riesgo de duplicación de código y dificultad para escalar.
+
+Se vuelve difícil mantener el sistema si mañana se decide cambiar el medio de envío (por ejemplo, pasar de console.log a un servicio externo).
+
+
+
+---
+
+4. Posible Solución
+
+Aplicar el Patrón Estrategia o Inversión de Dependencias (DIP):
+
+Definir una interfaz CanalNotificacion con un método enviar(mensaje: string).
+
+Crear implementaciones concretas: CanalConsola, CanalEmail, CanalPush, etc.
+
+Inyectar la estrategia en el constructor de NotificacionUsuario.
+
+
+✅ Ejemplo ajustado:
+
+```ts
+interface CanalNotificacion {
+    enviar(mensaje: string): void;
+}
+
+class CanalConsola implements CanalNotificacion {
+    enviar(mensaje: string): void {
+        console.log("👤 Notificación para Usuario: " + mensaje);
+    }
+}
+
+import Notificacion from "./Notificacion"
+
+export class NotificacionUsuario extends Notificacion {
+    private canal: CanalNotificacion;
+
+    constructor(id: number, mensaje: string, canal: CanalNotificacion) {
+        super(id, mensaje);
+        this.canal = canal;
+    }
+
+    enviar() {
+        this.canal.enviar(this.mensaje);
+    }
+}
+
+
+```
