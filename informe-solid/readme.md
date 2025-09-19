@@ -477,4 +477,3 @@ El proyecto actual tiene una base sólida con herencia y polimorfismo, pero **vi
 Con estas mejoras, el proyecto alcanzaría un cumplimiento del DIP de **8-9/10**.
 
 ---
-*Análisis DIP generado el 19 de septiembre de 2025*
