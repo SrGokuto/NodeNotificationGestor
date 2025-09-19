@@ -11,7 +11,7 @@ En el proyecto se identifican las siguientes clases relacionadas con notificacio
 Cada clase representa un tipo específico de notificación y hereda de la clase base `Notificacion`. Por ejemplo, `NotificacionAlerta` implementa el método `enviar` para mostrar un mensaje de alerta.
 
 
-### Definicon SRP y OCP
+### Definicion SRP y OCP
 El **Principio de Responsabilidad Única** establece que una clase debe tener una única razón para cambiar, es decir, debe estar enfocada en una sola responsabilidad.
 El **Principio de Abierto-Cerrado** indica que las entidades de software deben estar abiertas para extensión pero cerradas para modificación.
 
@@ -327,4 +327,154 @@ export class NotificacionUsuario extends Notificacion {
 ## Esto genera acoplamiento fuerte, dificulta la extensión y hace que cualquier cambio en el medio de salida requiera modificar las clases base y derivadas.
 
 
+
 # Informe sobre LID
+
+---
+
+# Informe de Evaluación: Dependency Inversion Principle (DIP)
+
+## Resumen Ejecutivo
+
+**Dependency Inversion Principle** establece que:
+
+1. Los módulos de alto nivel no deben depender de módulos de bajo nivel. Ambos deben depender de abstracciones.
+2. Las abstracciones no deben depender de detalles. Los detalles deben depender de abstracciones.
+
+
+## Análisis de Cumplimiento del DIP
+
+### ✅ **Aspectos que SÍ cumplen con DIP**
+
+#### 1. Uso de Herencia y Polimorfismo
+- **Buena práctica**: Las clases `NotificacionUsuario`, `NotificacionAlerta` y `NotificacionSistema` extienden la clase base `Notificacion`.
+- **Cumplimiento DIP**: El código de alto nivel (main loop) depende de la abstracción `Notificacion` en lugar de las implementaciones concretas.
+
+```typescript
+// ✅ El array usa la abstracción, no implementaciones concretas
+let notificaciones: Notificacion[] = []
+
+// ✅ Llama métodos de la abstracción
+notificaciones.forEach(n => n.mostrar())
+```
+
+#### 2. Polimorfismo en Acción
+- **Fortaleza**: El método `mostrar()` y `marcarLeida()` se invocan polimórficamente sin importar el tipo específico de notificación.
+
+### ❌ **Violaciones del DIP Identificadas**
+
+#### 1. **Violación Principal: Dependencias Directas en el Módulo Principal**
+
+El archivo `index.ts` (módulo de alto nivel) tiene dependencias directas de implementaciones concretas:
+
+```typescript
+// ❌ VIOLACIÓN DIP: Depende directamente de clases concretas
+import NotificacionUsuario from "./Notificaciones/NotificacionUsuario"
+import NotificacionAlerta from "./Notificaciones/NotificacionAlerta"
+import NotificacionSistema from "./Notificaciones/NotificacionSistema"
+
+// ❌ VIOLACIÓN DIP: Instanciación directa de clases concretas
+if (tipo === "usuario") {
+    nueva = new NotificacionUsuario(contadorId++, mensaje)
+} else if (tipo === "alerta") {
+    nueva = new NotificacionAlerta(contadorId++, mensaje)
+} else {
+    nueva = new NotificacionSistema(contadorId++, mensaje)
+}
+```
+
+**Problema**: El módulo principal conoce y depende de todas las implementaciones concretas.
+
+#### 2. **Falta de Abstracciones para Creación de Objetos**
+
+- No existe un patrón Factory o Abstract Factory
+- No hay interfaces que definan contratos
+- La lógica de creación está acoplada al código principal
+
+#### 3. **Método `enviar()` No Está en la Abstracción**
+
+```typescript
+// ❌ VIOLACIÓN DIP: Casting para acceder a método no abstracto
+;(nueva as any).enviar?.()
+```
+
+**Problema**: El método `enviar()` existe en las clases concretas pero no en la abstracción base.
+
+### 1. **Crear Interfaces y Abstracciones**
+
+```typescript
+// Propuesta: Interface para notificaciones
+interface INotificacion {
+    id: number;
+    mensaje: string;
+    leida: boolean;
+    mostrar(): void;
+    marcarLeida(): void;
+    enviar(): void; // ¡Incluir en la abstracción!
+}
+
+// Propuesta: Interface para factory
+interface INotificacionFactory {
+    crear(tipo: string, id: number, mensaje: string): INotificacion;
+}
+```
+
+### 2. **Implementar Factory Pattern**
+
+```typescript
+// Propuesta: Factory para desacoplar creación
+class NotificacionFactory implements INotificacionFactory {
+    crear(tipo: string, id: number, mensaje: string): INotificacion {
+        switch(tipo) {
+            case "usuario": return new NotificacionUsuario(id, mensaje);
+            case "alerta": return new NotificacionAlerta(id, mensaje);
+            case "sistema": return new NotificacionSistema(id, mensaje);
+            default: throw new Error("Tipo no soportado");
+        }
+    }
+}
+```
+
+### 3. **Inyección de Dependencias**
+
+```typescript
+// Propuesta: Main class que recibe dependencias
+class GestorNotificaciones {
+    constructor(private factory: INotificacionFactory) {}
+    
+    async crearNotificacion(tipo: string, mensaje: string): Promise<INotificacion> {
+        const nueva = this.factory.crear(tipo, this.contadorId++, mensaje);
+        // ... resto de lógica
+        return nueva;
+    }
+}
+```
+
+### 4. **Refactoring del Archivo Principal**
+
+El `index.ts` debería:
+- Solo importar interfaces/abstracciones
+- Usar inyección de dependencias
+- Delegar la creación de objetos a factories
+
+## Beneficios de Implementar las Mejoras
+
+1. **Extensibilidad**: Agregar nuevos tipos de notificación sin modificar código existente
+2. **Testabilidad**: Mockear dependencias fácilmente
+3. **Mantenibilidad**: Cambios en implementaciones no afectan módulos de alto nivel
+4. **Flexibilidad**: Intercambiar implementaciones en tiempo de ejecución
+
+## Conclusión DIP
+
+El proyecto actual tiene una base sólida con herencia y polimorfismo, pero **viola significativamente el DIP** debido a las dependencias directas del módulo principal hacia implementaciones concretas. 
+
+**Prioridades de refactoring:**
+1. 🔥 **Alta**: Implementar Factory Pattern para desacoplar creación
+2. 🔥 **Alta**: Crear interfaces formales 
+3. 🟡 **Media**: Añadir método `enviar()` a la abstracción base
+4. 🟡 **Media**: Implementar inyección de dependencias
+
+Con estas mejoras, el proyecto alcanzaría un cumplimiento del DIP de **8-9/10**.
+
+---
+*Análisis DIP generado el 19 de septiembre de 2025*
