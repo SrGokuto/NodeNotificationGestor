@@ -330,6 +330,39 @@ export class NotificacionUsuario extends Notificacion {
 
 # Informe sobre LID
 
+
+## Informe de Evaluación: I-Principio de segregacion de interfaces 
+
+Una *clase* no debería estar obligada a implementar métodos que no necesita. En TypeScript/POO esto se traduce en: las interfaces deben ser pequeñas, específicas y enfocadas, para que las clases que las implementen no carguen con métodos innecesarios. 
+
+## Análisis 
+
+### 1. Clase base *Notificacion* 
+- Tiene solo lo esencial: `id`, `mensaje`, `leida`, y métodos `mostrar()` y `marcarLeida()`.
+- - Ningún hijo se ve obligado a sobrescribir nada que no necesite → **esto sí respeta ISP** . 
+
+### 2. Clases hijas *(NotificacionAlerta, NotificacionSistema, NotificacionUsuario)* 
+- Cada una hereda de Notificacion y agrega su propio comportamiento con el método enviar().
+- Aquí hay un detalle: la clase padre no define el contrato de “enviar”, pero el código del index lo usa con (nueva as any).enviar?.().
+- Eso es un “hack” que rompe el tipado y muestra que no hay una interfaz clara para notificaciones que se envían.
+
+## Problema con ISP 
+- Unas clases tienen enviar() y otras no, y por eso usas as any. Eso *viola ISP* porque el consumidor (el index) no sabe con certeza qué métodos puede usar. ## Solución
+
+```ts
+interface IMostrable {
+  mostrar(): void
+}
+
+interface IMarcarLeida {
+  marcarLeida(): void
+}
+
+interface IEnviable {
+  enviar(): void
+}
+
+ ```
 ---
 
 # Informe de Evaluación: Dependency Inversion Principle (DIP)
