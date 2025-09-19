@@ -334,7 +334,6 @@ export class NotificacionUsuario extends Notificacion {
 
 # Informe de Evaluación: Dependency Inversion Principle (DIP)
 
-## Resumen Ejecutivo
 
 **Dependency Inversion Principle** establece que:
 
@@ -344,36 +343,36 @@ export class NotificacionUsuario extends Notificacion {
 
 ## Análisis de Cumplimiento del DIP
 
-### ✅ **Aspectos que SÍ cumplen con DIP**
+###  **Aspectos que SÍ cumplen con DIP**
 
 #### 1. Uso de Herencia y Polimorfismo
 - **Buena práctica**: Las clases `NotificacionUsuario`, `NotificacionAlerta` y `NotificacionSistema` extienden la clase base `Notificacion`.
 - **Cumplimiento DIP**: El código de alto nivel (main loop) depende de la abstracción `Notificacion` en lugar de las implementaciones concretas.
 
 ```typescript
-// ✅ El array usa la abstracción, no implementaciones concretas
+//  El array usa la abstracción, no implementaciones concretas
 let notificaciones: Notificacion[] = []
 
-// ✅ Llama métodos de la abstracción
+//  Llama métodos de la abstracción
 notificaciones.forEach(n => n.mostrar())
 ```
 
 #### 2. Polimorfismo en Acción
 - **Fortaleza**: El método `mostrar()` y `marcarLeida()` se invocan polimórficamente sin importar el tipo específico de notificación.
 
-### ❌ **Violaciones del DIP Identificadas**
+###  **Violaciones del DIP Identificadas**
 
 #### 1. **Violación Principal: Dependencias Directas en el Módulo Principal**
 
 El archivo `index.ts` (módulo de alto nivel) tiene dependencias directas de implementaciones concretas:
 
 ```typescript
-// ❌ VIOLACIÓN DIP: Depende directamente de clases concretas
+//  VIOLACIÓN DIP: Depende directamente de clases concretas
 import NotificacionUsuario from "./Notificaciones/NotificacionUsuario"
 import NotificacionAlerta from "./Notificaciones/NotificacionAlerta"
 import NotificacionSistema from "./Notificaciones/NotificacionSistema"
 
-// ❌ VIOLACIÓN DIP: Instanciación directa de clases concretas
+//  VIOLACIÓN DIP: Instanciación directa de clases concretas
 if (tipo === "usuario") {
     nueva = new NotificacionUsuario(contadorId++, mensaje)
 } else if (tipo === "alerta") {
@@ -394,7 +393,7 @@ if (tipo === "usuario") {
 #### 3. **Método `enviar()` No Está en la Abstracción**
 
 ```typescript
-// ❌ VIOLACIÓN DIP: Casting para acceder a método no abstracto
+//  VIOLACIÓN DIP: Casting para acceder a método no abstracto
 ;(nueva as any).enviar?.()
 ```
 
@@ -469,10 +468,10 @@ El `index.ts` debería:
 El proyecto actual tiene una base sólida con herencia y polimorfismo, pero **viola significativamente el DIP** debido a las dependencias directas del módulo principal hacia implementaciones concretas. 
 
 **Prioridades de refactoring:**
-1. 🔥 **Alta**: Implementar Factory Pattern para desacoplar creación
-2. 🔥 **Alta**: Crear interfaces formales 
-3. 🟡 **Media**: Añadir método `enviar()` a la abstracción base
-4. 🟡 **Media**: Implementar inyección de dependencias
+1.  **Alta**: Implementar Factory Pattern para desacoplar creación
+2.  **Alta**: Crear interfaces formales 
+3.  **Media**: Añadir método `enviar()` a la abstracción base
+4.  **Media**: Implementar inyección de dependencias
 
 Con estas mejoras, el proyecto alcanzaría un cumplimiento del DIP de **8-9/10**.
 
