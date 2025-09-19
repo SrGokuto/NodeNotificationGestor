@@ -330,8 +330,94 @@ export class NotificacionUsuario extends Notificacion {
 
 # Informe sobre LID
 
+# Informe de Evaluación:Principio de Sustitución de Liskov (LSP)
 
-## Informe de Evaluación: I-Principio de segregacion de interfaces 
+Tenemos una clase base
+```ts
+class Notificacion { ... }
+```
+
+Tenemos tres subclases: 
+```ts
+export class NotificacionUsuario extends Notificacion { ... }  
+export class NotificacionAlerta extends Notificacion { ... }  
+export class NotificacionSistema extends Notificacion { ... }
+```
+
+El uso de index.ts:
+```ts
+let notificaciones: Notificacion[] = []
+```
+Y por último las instancias de las subclases:  
+```ts
+let nueva: Notificacion  
+if (tipo === "usuario") {  
+nueva = new NotificacionUsuario(...)  
+} else if (tipo === "alerta") {  
+nueva = new NotificacionAlerta(...)  
+} else {  
+nueva = new NotificacionSistema(...)  
+}  
+notificaciones.push(nueva)  
+nueva.mostrar()  
+;(nueva as any).enviar?.()
+```
+
+El problema por el que no se cumple Liskov es porque el método enviar no está definido en la clase base Notificación.  
+Solo existe en las subclases, por ejemplo: 
+```ts
+enviar() {  
+console.log("Notificación para Usuario: " + this.mensaje)  
+}  
+```
+
+Entonces, cuando hago esto: 
+```ts
+;(nueva as any).enviar?.()  
+```
+
+Estoy forzando el uso de un método que no garantiza que exista en Notificación, lo que rompe LSP ya que la clase padre (Notificación) no define un contrato para ese comportamiento.  
+
+Cómo solucionar esto:  
+Agrega enviar() como un método en Notificación, y haz que todas las subclases lo sobrescriban. 
+```ts
+class Notificacion {  
+...  
+enviar() {  
+console.log(`📨 Notificación: ${this.mensaje}`)  
+}  
+}  
+```
+Y en cada subclase: 
+```ts
+enviar() {  
+console.log("👤 Notificación para Usuario: " + this.mensaje)  
+}  
+```
+Y ahora puedes hacer:
+```ts
+nueva.enviar()  
+```
+Conclusión:  
+¿Mi proyecto cumple con el principio de sustitución de Liskov?  
+No, actualmente no cumple.  
+
+Porque:  
+Se invoca enviar() sobre objetos del tipo base (Notificación), pero ese método no está definido en la clase base.  
+Se usa un "hack" (as any) para evitar errores de tipo.  
+
+Recomendación:  
+Define enviar en la clase base Notificación como método que puede ser sobrescrito por las subclases:  
+```ts
+class Notificacion {  
+...  
+enviar() {  
+console.log(`📨 Notificación genérica: ${this.mensaje}`)  
+}  
+}
+```
+
+# Informe de Evaluación: I-Principio de segregacion de interfaces 
 
 Una *clase* no debería estar obligada a implementar métodos que no necesita. En TypeScript/POO esto se traduce en: las interfaces deben ser pequeñas, específicas y enfocadas, para que las clases que las implementen no carguen con métodos innecesarios. 
 
