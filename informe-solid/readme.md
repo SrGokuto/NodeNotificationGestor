@@ -435,7 +435,7 @@ Una *clase* no debería estar obligada a implementar métodos que no necesita. E
 ## Problema con ISP 
 - Unas clases tienen enviar() y otras no, y por eso usas as any. Eso *viola ISP* porque el consumidor (el index) no sabe con certeza qué métodos puede usar.
   
-##Si no cumplen, ¿cómo se pueden dividir en interfaces más pequeñas y cohesionadas?
+## Si no cumplen, ¿cómo se pueden dividir en interfaces más pequeñas y cohesionadas?
 Se podrían crear interfaces separadas y específicas, por ejemplo:
 
 - `IMostrable` → con el método mostrar().
