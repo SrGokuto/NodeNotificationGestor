@@ -320,11 +320,11 @@ export class NotificacionUsuario extends Notificacion {
 
 ```
 
-# Conclusiones Generales
+## Conclusiones Generales
 
-## El diseño actual de las clases de notificación no cumple plenamente con los principios SOLID SRP (Responsabilidad Única) y OCP (Abierto/Cerrado).
-## El motivo principal es que las clases mezclan la lógica de datos/estado con la lógica de presentación o envío (por ejemplo, el uso directo de console.log dentro de los métodos).
-## Esto genera acoplamiento fuerte, dificulta la extensión y hace que cualquier cambio en el medio de salida requiera modificar las clases base y derivadas.
+ - El diseño actual de las clases de notificación no cumple plenamente con los principios SOLID SRP (Responsabilidad Única) y OCP (Abierto/Cerrado).
+ - El motivo principal es que las clases mezclan la lógica de datos/estado con la lógica de presentación o envío (por ejemplo, el uso directo de console.log dentro de los métodos).
+ - Esto genera acoplamiento fuerte, dificulta la extensión y hace que cualquier cambio en el medio de salida requiera modificar las clases base y derivadas.
 
 
 
@@ -435,6 +435,23 @@ Una *clase* no debería estar obligada a implementar métodos que no necesita. E
 ## Problema con ISP 
 - Unas clases tienen enviar() y otras no, y por eso usas as any. Eso *viola ISP* porque el consumidor (el index) no sabe con certeza qué métodos puede usar. ## Solución
 
+** Antes
+```ts
+interface IMostrable {
+  mostrar(): void
+}
+
+interface IMarcarLeida {
+  marcarLeida(): void
+}
+
+interface IEnviable {
+  enviar(): void
+}
+
+ ```
+
+** Despues 
 ```ts
 interface IMostrable {
   mostrar(): void
