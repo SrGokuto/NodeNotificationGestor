@@ -330,7 +330,7 @@ export class NotificacionUsuario extends Notificacion {
 
 # Informe sobre LID
 
-# Informe de Evaluación:Principio de Sustitución de Liskov (LSP)
+## Informe de Evaluación:Principio de Sustitución de Liskov (LSP)
 
 Tenemos una clase base
 ```ts
@@ -433,25 +433,67 @@ Una *clase* no debería estar obligada a implementar métodos que no necesita. E
 - Eso es un “hack” que rompe el tipado y muestra que no hay una interfaz clara para notificaciones que se envían.
 
 ## Problema con ISP 
-- Unas clases tienen enviar() y otras no, y por eso usas as any. Eso *viola ISP* porque el consumidor (el index) no sabe con certeza qué métodos puede usar. ## Solución
+- Unas clases tienen enviar() y otras no, y por eso usas as any. Eso *viola ISP* porque el consumidor (el index) no sabe con certeza qué métodos puede usar.
+  
+##Si no cumplen, ¿cómo se pueden dividir en interfaces más pequeñas y cohesionadas?
+Se podrían crear interfaces separadas y específicas, por ejemplo:
+
+- `IMostrable` → con el método mostrar().
+- `IMarcarLeida` → con el método marcarLeida().
+- `IEnviable` → con el método enviar().
+
+## Solución
 
 ** Antes
 ```ts
-interface IMostrable {
-  mostrar(): void
+import Notificacion from "./Notificacion"
+
+export class NotificacionAlerta extends Notificacion {
+    constructor(id: number, mensaje: string) {
+        super(id, mensaje)
+    }
+
+    enviar() {
+        console.log("⚠️ Notificación de Alerta: " + this.mensaje)
+    }
 }
 
-interface IMarcarLeida {
-  marcarLeida(): void
-}
-
-interface IEnviable {
-  enviar(): void
-}
-
+export default NotificacionAlerta;
  ```
 
-** Despues 
+```ts
+import Notificacion from "./Notificacion"
+
+export class NotificacionSistema extends Notificacion {
+    constructor(id: number, mensaje: string) {
+        super(id, mensaje)
+    }
+
+    enviar() {
+        console.log("💻 Notificación del Sistema: " + this.mensaje)
+    }
+}
+
+export default NotificacionSistema;
+ ```
+
+```ts
+import Notificacion  from "./Notificacion"
+
+export class NotificacionUsuario extends Notificacion {
+    constructor(id: number, mensaje: string) {
+        super(id, mensaje)
+    }
+
+    enviar() {
+        console.log("👤 Notificación para Usuario: " + this.mensaje)
+    }
+}
+
+export default NotificacionUsuario;
+ ```
+
+** Despues - Solución
 ```ts
 interface IMostrable {
   mostrar(): void
